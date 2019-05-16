@@ -120,10 +120,8 @@ void Flash::getDeviceID(uint8_t *buffer) {
 	for (int i = 0; i < 5; i++) {
 		buffer[i] = spiTransfer(DummyByte);
 		if (debug) {
-
 			terminal->sendByte8ToBinaryString(buffer[i]);
 			terminal->sendString("\n\r");
-
 		}
 	}
 	setCS(false);
@@ -224,7 +222,7 @@ bool Flash::isBusy() {
 	return !(readStatusRegister() & BusyFlag);
 }
 
-uint8_t Flash::readByte(const address_t *add) {
+uint8_t Flash::read(const address_t *add) {
 	uint8_t incommingByte;
 	uint32_t address = 0;
 	address = add->page;
@@ -245,7 +243,7 @@ uint8_t Flash::readByte(const address_t *add) {
 	return incommingByte;
 }
 
-void Flash::readByte(const address_t *add, uint8_t *buffer, uint16_t nByte) {
+void Flash::read(const address_t *add, uint8_t *buffer, uint16_t nByte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -266,7 +264,7 @@ void Flash::readByte(const address_t *add, uint8_t *buffer, uint16_t nByte) {
 	}
 	setCS(false);
 }
-void Flash::readByte(const address_t *add, char *buffer, uint16_t nByte) {
+void Flash::read(const address_t *add, char *buffer, uint16_t nByte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -309,7 +307,7 @@ void Flash::readPageArray(const address_t *add, uint8_t* buffer,
 	setCS(false);
 }
 
-void Flash::writeByte(const address_t *add, uint8_t byte) {
+void Flash::write(const address_t *add, uint8_t byte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -326,7 +324,7 @@ void Flash::writeByte(const address_t *add, uint8_t byte) {
 	while (!(readStatusRegister() & BusyFlag))
 		;
 }
-void Flash::writeByte(const address_t *add, int byte) {
+void Flash::write(const address_t *add, int byte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -343,7 +341,7 @@ void Flash::writeByte(const address_t *add, int byte) {
 	while (!(readStatusRegister() & BusyFlag))
 		;
 }
-void Flash::writeByte(const address_t *add, uint16_t byte) {
+void Flash::write(const address_t *add, uint16_t byte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -362,7 +360,7 @@ void Flash::writeByte(const address_t *add, uint16_t byte) {
 	while (!(readStatusRegister() & BusyFlag))
 		;
 }
-void Flash::writeByte(const address_t* add, uint32_t byte) {
+void Flash::write(const address_t* add, uint32_t byte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -382,7 +380,7 @@ void Flash::writeByte(const address_t* add, uint32_t byte) {
 		;
 }
 
-void Flash::writeByte(const address_t *add, uint8_t *byte, uint16_t nByte,
+void Flash::write(const address_t *add, uint8_t *byte, uint16_t nByte,
 		uint16_t offsetByte) {
 	uint32_t address = 0;
 	address = add->page;
@@ -403,7 +401,7 @@ void Flash::writeByte(const address_t *add, uint8_t *byte, uint16_t nByte,
 		;
 }
 
-void Flash::writeByte(const address_t *add, const char *byte, uint16_t nByte) {
+void Flash::write(const address_t *add, const char *byte, uint16_t nByte) {
 	uint8_t data;
 
 	if (debug)
@@ -430,7 +428,7 @@ void Flash::writeByte(const address_t *add, const char *byte, uint16_t nByte) {
 		terminal->sendString("Done. \n\r\r");
 }
 
-void Flash::erasePage(const address_t *add) {
+void Flash::formatPage(const address_t *add) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -453,7 +451,7 @@ void Flash::erasePage(const address_t *add) {
 
 }
 
-void Flash::eraseChip() {
+void Flash::formatFlash() {
 	if (debug)
 
 		terminal->sendString("Erasing Chip...\n\r");
@@ -486,28 +484,26 @@ void Flash::disableSectorProtection() {
 	if (debug)
 		terminal->sendString("Done.\n\r");
 }
-void Flash::readControlRegister() {
-	redMaxCurrent = readByte(&RedMaxCurrentSettingAddress);
-	greenMaxCurrent = readByte(&GreenMaxCurrentSettingAddress);
-	blueMaxCurrent = readByte(&BlueMaxCurrentSettingAddress);
-	globalBrightness = readByte(&GlobalBrightnessSettingAddress);
+void Flash::readControlTLC5955Register() {
+	redMaxCurrent = read(&RedMaxCurrentSettingAddress);
+	greenMaxCurrent = read(&GreenMaxCurrentSettingAddress);
+	blueMaxCurrent = read(&BlueMaxCurrentSettingAddress);
+	globalBrightness = read(&GlobalBrightnessSettingAddress);
 }
 
-void Flash::writeControlRegister() {
-	writeByte(&RedMaxCurrentSettingAddress, redMaxCurrent);
-	writeByte(&GreenMaxCurrentSettingAddress, greenMaxCurrent);
-	writeByte(&BlueMaxCurrentSettingAddress, blueMaxCurrent);
-	writeByte(&GlobalBrightnessSettingAddress, globalBrightness);
+void Flash::writeControlTLC5955Register() {
+	write(&RedMaxCurrentSettingAddress, redMaxCurrent);
+	write(&GreenMaxCurrentSettingAddress, greenMaxCurrent);
+	write(&BlueMaxCurrentSettingAddress, blueMaxCurrent);
+	write(&GlobalBrightnessSettingAddress, globalBrightness);
 }
 
-uint32_t Flash::getPositionOfPresentImagesInCarrousel() {
-	uint8_t bytes[4];
-	uint32_t result;
-	readPageArray(&PositionOfPresentImagesInCarrouselAddress, bytes, 4);
-	result = bytes[0];
-	result = (result << 8) | bytes[1];
-	result = (result << 8) | bytes[2];
-	result = (result << 8) | bytes[3];
+uint16_t Flash::getPositionOfPresentImagesInCarrousel() {
+	uint8_t bytes[2];
+	uint16_t result;
+	read(&PositionOfPresentImagesInCarrouselAddress, bytes, 2);
+	result = bytes[1];
+	result = (result << 8) | bytes[0];
 	return result;
 }
 
@@ -518,7 +514,7 @@ void Flash::setImageInCarrousel(uint8_t imageNo) {
 }
 
 void Flash::savePositionOfPresentImagesInCarrousel() {
-	writeByte(&PositionOfPresentImagesInCarrouselAddress,
+	write(&PositionOfPresentImagesInCarrouselAddress,
 			positionOfPresentImages);
 }
 
@@ -557,19 +553,19 @@ bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo,
 
 	uint16_t payloadSize = ColumnPixelArraySize;
 
-	writeByte(&add, source, PageSize - pixelColumnStartByte);
+	write(&add, source, PageSize - pixelColumnStartByte);
 	payloadSize -= (PageSize - pixelColumnStartByte);
 	uint8_t pageToWrite = floor(payloadSize / PageSize);
 	for (uint8_t i = 0; i < pageToWrite; i++) {
 		add.page++;
 		add.byte = 0;
-		writeByte(&add, source, PageSize, ColumnPixelArraySize - payloadSize);
+		write(&add, source, PageSize, ColumnPixelArraySize - payloadSize);
 		payloadSize -= PageSize;
 	}
 
 	add.page++;
 	add.byte = 0;
-	writeByte(&add, source, payloadSize, ColumnPixelArraySize - payloadSize);
+	write(&add, source, payloadSize, ColumnPixelArraySize - payloadSize);
 	payloadSize -= payloadSize;
 
 	if (debug)
@@ -704,7 +700,7 @@ uint8_t Flash::countSetBits(uint32_t n) {
 
 void Flash::resetImageInCarrousel(uint8_t imageNo) {
 	positionOfPresentImages &= ~(1 << (imageNo));
-	writeByte(&PositionOfPresentImagesInCarrouselAddress,
+	write(&PositionOfPresentImagesInCarrouselAddress,
 			positionOfPresentImages);
 }
 
@@ -712,7 +708,7 @@ void Flash::setFilename(uint8_t imageNo, uint8_t* fileName) {
 	imageNo = imageNo % MaxImageStored;
 	address_t add = FilenamePage;
 	add.byte = imageNo * FilenameSize;
-	//writeByte(&add, fileName, sizeof(fileName));
+	//write(&add, fileName, sizeof(fileName));
 	uint16_t nByte = sizeof(fileName);
 	uint8_t data;
 
@@ -746,7 +742,7 @@ void Flash::resetFilename(uint8_t imageNo) {
 	address_t add = FilenamePage;
 	add.byte = imageNo * FilenameSize;
 	for (uint8_t i = 0; i < FilenameSize; i++) {
-		writeByte(&add, DummyByte);
+		write(&add, DummyByte);
 		add.byte++;
 	}
 	if (debug)
@@ -756,7 +752,7 @@ void Flash::getFilename(uint8_t imageNo, char *destination) {
 	imageNo = imageNo % MaxImageStored;
 	address_t add = FilenamePage;
 	add.byte = imageNo * FilenameSize;
-	readByte(&add, destination, (uint32_t) FilenameSize);
+	read(&add, destination, (uint32_t) FilenameSize);
 //	if (debug)
 //		terminal->sendString("getFilename\n\r");
 }
